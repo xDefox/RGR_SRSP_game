@@ -1,7 +1,78 @@
-🎮 Game Catalog & Management SystemИнформационная система (REST API) для каталогизации видеоигр, управления базой разработчиков и категорий. Проект выполнен в рамках лабораторной работы по Spring Boot.🌟 Основные возможностиТрехуровневая иерархия данных: Категория → Разработчик → Игра.Управление пользователями: Хранение учетных записей и ролей в базе данных.Безопасность: Разграничение прав доступа (RBAC) через Spring Security.Валидация: Строгая проверка входящих данных на уровне сущностей (Hibernate Validator).ORM: Автоматическая работа с MySQL через Spring Data JPA.🛠 Технологический стекJava 17Spring Boot 3.x (Web, Data JPA, Security, Validation)MySQL (База данных)Hibernate (ORM)Maven (Сборка проекта)📊 Модель данныхСущности:Category: Группирует разработчиков (например, "AAA-студии", "Инди"). Содержит описание и ссылку на иконку.Developer: Привязан к категории, владеет набором игр.Game: Конкретный продукт с указанием жанра, названия и размера (поддерживает форматы "10 GB", "500 MB").User: Данные для входа (Username, BCrypt Password) и уровень доступа (Authority).Связи (Relationships):Category 1:N DeveloperDeveloper 1:N Game🔐 Безопасность и РолиСистема использует Basic Auth. Права распределены следующим образом:РольПрава доступаROLE_USERТолько просмотр (GET) всех сущностей.ROLE_MANAGERПросмотр, редактирование (PUT) и удаление (DELETE) существующих данных.ROLE_ADMINПолный доступ, включая создание новых записей (POST).🚀 Настройка и запускКонфигурация БДУбедитесь, что в MySQL создана база данных lilubrary. Настройки подключения находятся в src/main/resources/application.properties:Propertiesspring.datasource.url=jdbc:mysql://localhost:3306/lilubrary
-spring.datasource.username=root
-spring.datasource.password=1982
-Сборка и запускКлонируйте репозиторий:Bashgit clone https://github.com/your-username/your-repo-name.git
-Соберите проект:Bash./mvnw clean install
-Запустите приложение:Bash./mvnw spring-boot:run
-🔗 Примеры API EndpointsМетодЭндпоинтОписаниеGET/api/game/latestПолучить 5 последних добавленных игрGET/api/game/search?term=...Поиск игры по названиюGET/api/game/developer/{id}Все игры конкретного разработчикаPOST/api/gameСоздание игры (нужна роль ADMIN)DELETE/api/game/{id}Удаление игры (ADMIN/MANAGER)📝 Особенности кодаJSON Handling: Использование @JsonManagedReference и @JsonBackReference предотвращает бесконечную рекурсию при сериализации связанных объектов.Custom Security: Реализован CustomUserDetailService для интеграции Spring Security с базой данных через UserRepository.Soft Validation: Регулярные выражения в аннотациях @Pattern гарантируют корректность ввода жанров и размеров файлов.
+# 🎮 Game Management System (REST API)
+
+![Java](https://img.shields.io/badge/Java-17-orange?style=for-the-badge&logo=java)
+![Spring](https://img.shields.io/badge/Spring_Boot-3.x-green?style=for-the-badge&logo=spring)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?style=for-the-badge&logo=mysql)
+
+Информационная система для каталогизации видеоигр, их разработчиков и категорий. Построена на стеке Spring Boot и реализует модель управления доступом на основе ролей (RBAC).
+
+---
+
+## 🛠 Технологический стек
+
+* **Backend**: Java 17, Spring Boot 3.x (Web, Data JPA, Security)
+* **Database**: MySQL 8.0
+* **ORM**: Hibernate
+* **Security**: Basic Auth + Role-Based Access Control
+* **JSON**: Jackson (с защитой от рекурсии через `@JsonManagedReference`)
+
+---
+
+## 📊 Структура данных
+
+Проект использует трехуровневую иерархию сущностей:
+1.  **Category** (Категория) — Группирует разработчиков, имеет описание и иконку.
+2.  **Developer** (Разработчик) — Принадлежит категории, содержит список игр.
+3.  **Game** (Игра) — Содержит название, жанр и размер (формат: `10 GB`, `500 MB`).
+
+### 🔐 Роли и доступ
+| Роль | GET (Чтение) | POST (Создание) | PUT/DELETE (Правка) |
+| :--- | :---: | :---: | :---: |
+| **USER** | ✅ | ❌ | ❌ |
+| **MANAGER** | ✅ | ❌ | ✅ |
+| **ADMIN** | ✅ | ✅ | ✅ |
+
+---
+
+## 🔌 API Endpoints
+
+### Игры (`/api/game`)
+| Метод | Путь | Описание |
+| :--- | :--- | :--- |
+| `GET` | `/api/game/latest` | Список 5 последних игр |
+| `GET` | `/api/game/search?term=...` | Поиск по названию |
+| `GET` | `/api/game/type/{type}` | Фильтр по жанру |
+| `POST` | `/api/game` | Добавить игру (ADMIN) |
+
+### Разработчики и Категории
+Аналогичные CRUD-методы доступны по путям `/api/developer` и `/api/category`.
+
+---
+
+## ⚙️ Установка и запуск
+
+1.  **Настройте базу данных MySQL**:
+    Создайте схему `lilubrary` и проверьте `src/main/resources/application.properties`:
+    ```properties
+    spring.datasource.url=jdbc:mysql://localhost:3306/lilubrary
+    spring.datasource.username=root
+    spring.datasource.password=1982
+    ```
+
+2.  **Сборка проекта**:
+    ```bash
+    ./mvnw clean install
+    ```
+
+3.  **Запуск приложения**:
+    ```bash
+    ./mvnw spring-boot:run
+    ```
+
+---
+
+## 📝 Валидация данных
+В системе реализована строгая проверка данных:
+* **Названия**: от 2 до 100 символов.
+* **Типы игр**: строго `RPG`, `FPS`, `Strategy`, `Adventure`, `Simulation`.
+* **Размер**: паттерн `\d+\s?(GB|MB)` (например, "15 GB").
